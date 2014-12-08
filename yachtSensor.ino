@@ -10,7 +10,7 @@
   The circuit:
  * LCD RS pin to digital pin 52
  * LCD Enable pin to digital pin 53
- * LCD D4 pin to digital pin 40
+ * LCD D4 pin to digital pin 40 
  * LCD D5 pin to digital pin 39
  * LCD D6 pin to digital pin 38
  * LCD D7 pin to digital pin 37
@@ -178,7 +178,7 @@ void ListFiles(EthernetClient client, uint8_t flags) {
 #define BUFSIZ 100
 
 void loop() {
-    char clientline[BUFSIZ];
+  char clientline[BUFSIZ];
   int index = 0;
   
   EthernetClient client = server.available();
@@ -306,7 +306,6 @@ void loop() {
   
   alarms = "None"; //impliment alarms from above
   
-
   delay(1);
   
   //Display Data 

@@ -1,10 +1,14 @@
-#include <ClickButton.h>
+
+#include "RTClib.h"
+
 #include <LiquidCrystal.h>
 #include <math.h>
 #include <SdFat.h>
 #include <SdFatUtil.h>
 #include <Ethernet.h>
 #include <SPI.h>
+
+RTC_DS1307 RTC;
 
  /*
   The circuit:
@@ -83,7 +87,20 @@ float cabinHumid = 0;
 
 const int buttonPin1 = 22;
 
-ClickButton button1(buttonPin1, LOW, CLICKBTN_PULLUP);
+void printTime(DateTime now){
+    Serial.print(now.year(), DEC);
+    Serial.print('/');
+    Serial.print(now.month(), DEC);
+    Serial.print('/');
+    Serial.print(now.day(), DEC);
+    Serial.print(' ');
+    Serial.print(now.hour(), DEC);
+    Serial.print(':');
+    Serial.print(now.minute(), DEC);
+    Serial.print(':');
+    Serial.print(now.second(), DEC);
+    Serial.println();
+}
 
 void setup() {
   Serial.begin(9600);
@@ -109,10 +126,13 @@ void setup() {
   
   for (int i = 0; i < numReadings; i++) readings[i] = 0; 
   
-  button1.debounceTime = 20;
-  button1.multiclickTime = 250;
-  button1.longClickTime = 1000;
-
+  //button1.debounceTime = 20;
+  //button1.multiclickTime = 250;
+  //button1.longClickTime = 1000;
+  RTC.begin();
+  if (! RTC.isrunning(){
+    Serial.println("RTC is NOT running!");
+  }
 }
 
 void ListFiles(EthernetClient client, uint8_t flags) {
@@ -180,6 +200,9 @@ void ListFiles(EthernetClient client, uint8_t flags) {
 void loop() {
   char clientline[BUFSIZ];
   int index = 0;
+  
+  DateTime now=RTC.now();
+  printTime(now);
   
   EthernetClient client = server.available();
   if (client) {
@@ -269,13 +292,13 @@ void loop() {
     client.stop();
   }
   
-  button1.Update();
+  //button1.Update();
   
-  if(button1.clicks == 1){
-    lcd.clear();
-    page = page + 1;
-    if(page > 3) page = 1;  
-  }
+  //if(button1.clicks == 1){
+  //  lcd.clear();
+  //  page = page + 1;
+  //  if(page > 3) page = 1;  
+  //}
   
   //impliment button2 to control brightness
   analogWrite(2, 100);

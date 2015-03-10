@@ -1,5 +1,3 @@
-#include <Wire.h>
-#include "RTClib.h"
 #include <ClickButton.h>
 #include <LiquidCrystal.h>
 #include <math.h>
@@ -7,8 +5,6 @@
 #include <SdFatUtil.h>
 #include <Ethernet.h>
 #include <SPI.h>
-
-RTC_DS1307 RTC;
 
  /*
   The circuit:
@@ -60,7 +56,7 @@ int index = 0;
 int total = 0;
 int average = 0;
 
-int page = 3;
+int page = 1;
 int rpm = 0;
 
 float hVoltage = 0.0;
@@ -74,8 +70,6 @@ float hAmp = 0;
 int engHours = 0;
   
 float fuel = 11.5; //impliment fuel sensor - Analog
-float fuelV = 0;
-float fuelO = 0;
   
 float  avgGPH = 0.5; //impliment calculation - requires data logging
   
@@ -94,8 +88,6 @@ ClickButton button1(buttonPin1, LOW, CLICKBTN_PULLUP);
 void setup() {
   Serial.begin(9600);
   delay(2000);
-  Wire.begin();
-  RTC.begin();
   
   // initialize the SD card at SPI_HALF_SPEED to avoid bus errors with
   // breadboards.  use SPI_FULL_SPEED for better performance.
@@ -113,7 +105,7 @@ void setup() {
   
   // set up the LCD's number of columns and rows: 
   lcd.begin(20, 4);
-  page = 2; //reset page to 1 on restart
+  page = 1; //reset page to 1 on restart
   
   for (int i = 0; i < numReadings; i++) readings[i] = 0; 
   
@@ -186,23 +178,8 @@ void ListFiles(EthernetClient client, uint8_t flags) {
 #define BUFSIZ 100
 
 void loop() {
-  delay(1000);
   char clientline[BUFSIZ];
   int index = 0;
-  
-  DateTime now = RTC.now();
-  Serial.print(now.year(), DEC);
-  Serial.print('/');
-  Serial.print(now.month(), DEC);
-  Serial.print('/');
-  Serial.print(now.day(), DEC);
-  Serial.print(' ');
-  Serial.print(now.hour(), DEC);
-  Serial.print(':');
-  Serial.print(now.minute(), DEC);
-  Serial.print(':');
-  Serial.print(now.second(), DEC);
-  Serial.println();
   
   EthernetClient client = server.available();
   if (client) {
@@ -309,7 +286,7 @@ void loop() {
   index = index + 1;                    
   if (index >= numReadings) index = 0;                           
   average = total / numReadings;     
-  hVoltage = (analogRead(0)* (5.0 / 1023.0))/0.29411;
+  hVoltage = average* (5.0 / 1023.0)+6.5;
   Serial.println(hVoltage);
  
   hVoltagePercent = int(((hVoltage - hVoltageMin) / (hVoltageMax - hVoltageMin))*100);
@@ -321,10 +298,7 @@ void loop() {
   
   engHours = 104; //impliment engine hours - Digital
   
-  fuelV = analogRead(1)* (5.0 / 1023.0);
-  fuelO = ((fuelV*500.0)/(5.0 - fuelV));
-  fuel = 11.5*(1.0-((fuelO-33.0)/207.0));
-  if (fuel < 0) fuel =0;
+  fuel = 11.5; //impliment fuel sensor - Analog
   
   avgGPH = 0.5; //impliment calculation - requires data logging
   
@@ -364,7 +338,7 @@ void loop() {
       lcd.setCursor(14,1);
       lcd.print(engHours);
       lcd.setCursor(0,2);
-      lcd.print("Fuel:");
+      lcd.print("Fuel Remaining:");
       lcd.setCursor(14,2);
       lcd.print(fuel);
       lcd.setCursor(0,3);

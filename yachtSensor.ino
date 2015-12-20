@@ -1,4 +1,4 @@
- #include <Wire.h>
+#include <Wire.h>
 #include <math.h>
 #include <SdFat.h>
 #include <SdFatUtil.h>
@@ -9,24 +9,7 @@
 #include "RTClib.h"
 #include <ClickButton.h>
 
-
-
-/*
-The circuit:
-* LCD RS pin to digital pin 52
-* LCD Enable pin to digital pin 53
-* LCD D4 pin to digital pin 40
-* LCD D5 pin to digital pin 39
-* LCD D6 pin to digital pin 38
-* LCD D7 pin to digital pin 37
-* LCD R/W pin to ground
-* LCD VSS pin to ground
-* LCD VCC pin to 5V
-* 10K resistor:
-* ends to +5V and ground
-* wiper to LCD VO pin (pin 3)
-*/
-
+#include "yachtSensor.h"
 /************ REALTIME CLOCK STUFF ************/
 RTC_DS1307 RTC;
 
@@ -45,20 +28,6 @@ const int SSpin = 53;
 
 // store error strings in flash to save RAM
 #define error(s) error_P(PSTR(s))
-
-void error_P(const char* str)
-{
-	PgmPrint("error: ");
-	SerialPrintln_P(str);
-	if (card.errorCode())
-	{
-		PgmPrint("SD error: ");
-		Serial.print(card.errorCode(), HEX);
-		Serial.print(',');
-		Serial.println(card.errorData(), HEX);
-	}
-	while (1);
-}
 
 /************ LCD STUFF ************/
 // initialize the library with the numbers of the interface pins
@@ -173,6 +142,20 @@ void ListFiles(EthernetClient client, uint8_t flags)
 	client.println("</li>");
 	}
 	client.println("</ul>");
+}
+
+void error_P(const char* str)
+{
+	PgmPrint("error: ");
+	SerialPrintln_P(str);
+	if (card.errorCode())
+	{
+		PgmPrint("SD error: ");
+		Serial.print(card.errorCode(), HEX);
+		Serial.print(',');
+		Serial.println(card.errorData(), HEX);
+	}
+	while (1);
 }
 
 void setup()
@@ -319,7 +302,6 @@ void loop()
 	
 	if (button1.clicks != 0)
 	{
-		Serial.println("Button!");
 		lcd.clear();
 		page = page + 1;
 		if (page > 3) page = 1;
@@ -335,14 +317,14 @@ void loop()
 	if (index >= numReadings) index = 0;
 	average = total / numReadings;
 	
-	hVoltage = (analogRead(14) * (5.0 / 1023.0)) * (5.0405282035);
+	hVoltage = (analogRead(15) * (5.0 / 1023.0)) * (5.0405282035);
 	
 	hVoltagePercent = int(((hVoltage - hVoltageMin) / (hVoltageMax - hVoltageMin)) * 100);
 	if (hVoltagePercent > 100) hVoltagePercent = 100;
 	
 	hAmp = ((analogRead(13) * (5.0 / 1023.0))-2.5)*(50/2.5);
   
-        sVoltage = (analogRead(15) * (5.0 / 1023.0)) * (5.0405282035);
+        sVoltage = (analogRead(14) * (5.0 / 1023.0)) * (5.0405282035);
         
 	rpm =  1200; //impliment rpm sensor - Digital
 
@@ -379,6 +361,8 @@ void loop()
 		dataFile.print(now.second(), DEC);
 		dataFile.print("|");
 		dataFile.print(hVoltage);
+		dataFile.print("|");
+		dataFile.print(sVoltage);
 		dataFile.print("\n");
 		dataFile.close();
 
